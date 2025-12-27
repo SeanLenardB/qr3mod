@@ -34,65 +34,62 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(QRThreeMod.MODID)
 public class QRThreeMod {
-    // Define mod id in a common place for everything to reference
     public static final String MODID = "qrthree";
-    // Directly reference a slf4j logger
+    // NOTE(seanlb): no idea what "reference a slf4j logger" is
     public static final Logger LOGGER = LogUtils.getLogger();
-    // Create a Deferred Register to hold Blocks which will all be registered under the "examplemod" namespace
+
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
-    // Create a Deferred Register to hold Items which will all be registered under the "examplemod" namespace
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "examplemod" namespace
+
+    // NOTE(seanlb): I think this is how minecraft creates a mod tab for me
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
-    // Creates a new Block with the id "examplemod:example_block", combining the namespace and path
+
+
+    // NOTE(seanlb): BlockItem can be associated with its related block like this.
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-    // Creates a new BlockItem with the id "examplemod:example_block", combining the namespace and path
     public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
 
-    // Creates a new food item with the id "examplemod:example_id", nutrition 1 and saturation 2
+    // NOTE(seanlb): food item example
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
 
-    // Creates a creative tab with the id "examplemod:example_tab" for the example item, that is placed after the combat tab
+
+
+    // NOTE(seanlb): Every single creative tab of my mod is also a registry entry. Also remember to use Component.translatable() to get translation
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.examplemod")) //The language key for the title of your CreativeModeTab
+            .title(Component.translatable("itemGroup.examplemod"))
             .withTabsBefore(CreativeModeTabs.COMBAT)
             .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
-    // The constructor for the mod class is the first code that is run when your mod is loaded.
-    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
+
+
+    // NOTE(seanlb): The entrance to the mod is here, this is a constructor.
     public QRThreeMod(IEventBus modEventBus, ModContainer modContainer) {
-        // Register the commonSetup method for modloading
+        // TODO(seanlb): can this work with @SubscribeEvent?
         modEventBus.addListener(this::commonSetup);
 
-        // Register the Deferred Register to the mod event bus so blocks get registered
+        // NOTE(seanlb): remember to register the registries to the mod loaded event bus.
         BLOCKS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so items get registered
         ITEMS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
 
-        // Register ourselves for server and other game events we are interested in.
-        // Note that this is necessary if and only if we want *this* class (ExampleMod) to respond directly to events.
-        // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
+        // NOTE(seanlb): this line is like worse version of C# reflection in that you need to tell FML to look at my class!
         NeoForge.EVENT_BUS.register(this);
 
-        // Register the item to a creative tab
+        // TODO(seanlb): try to use @SubscribeEvent on this event. This is ugly as hell.
         modEventBus.addListener(this::addCreative);
 
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
+        // TODO(seanlb): look at the Config class
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
 
         if (Config.LOG_DIRT_BLOCK.getAsBoolean()) {
@@ -104,21 +101,19 @@ public class QRThreeMod {
         Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
     }
 
-    // Add the example block item to the building blocks tab
+    // NOTE(seanlb): I don't think this is necessary unless you're adding the blocks to Minecraft's tabs
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
             event.accept(EXAMPLE_BLOCK_ITEM);
         }
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        // Do something when the server starts
         LOGGER.info("HELLO from server starting");
     }
 
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
+    // NOTE(seanlb): This is the third way to subscribe to events. I prefer this tbh.
     @EventBusSubscriber(modid = QRThreeMod.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     static class ClientModEvents {
         @SubscribeEvent
