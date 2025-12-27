@@ -64,7 +64,8 @@ public class QRThreeMod {
             .withTabsBefore(CreativeModeTabs.COMBAT)
             .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
-                output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
+                output.accept(EXAMPLE_ITEM.get());
+                output.accept(EXAMPLE_BLOCK_ITEM.get());
             }).build());
 
 
@@ -82,9 +83,6 @@ public class QRThreeMod {
         // NOTE(seanlb): this line is like worse version of C# reflection in that you need to tell FML to look at my class!
         NeoForge.EVENT_BUS.register(this);
 
-        // TODO(seanlb): try to use @SubscribeEvent on this event. This is ugly as hell.
-        modEventBus.addListener(this::addCreative);
-
         // TODO(seanlb): look at the Config class
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
@@ -99,13 +97,6 @@ public class QRThreeMod {
         LOGGER.info("{}{}", Config.MAGIC_NUMBER_INTRODUCTION.get(), Config.MAGIC_NUMBER.getAsInt());
 
         Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
-    }
-
-    // NOTE(seanlb): I don't think this is necessary unless you're adding the blocks to Minecraft's tabs
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(EXAMPLE_BLOCK_ITEM);
-        }
     }
 
     @SubscribeEvent
